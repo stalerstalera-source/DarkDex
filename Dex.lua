@@ -15746,10 +15746,18 @@ Guidelines:
 					if item.toolCalls and #item.toolCalls > 0 then
 						local tcList = {}
 						for idx, tc in ipairs(item.toolCalls) do
-							local argsStr = "{}"
-							if tc.args then
-								local okEnc, enc = pcall(httpService.JSONEncode, httpService, tc.args)
-								if okEnc and enc then argsStr = enc end
+							local argsStr = tc.rawArgs or "{}"
+							if argsStr == "" or argsStr == "[]" then
+								if tc.args and next(tc.args) ~= nil then
+									local okEnc, enc = pcall(httpService.JSONEncode, httpService, tc.args)
+									if okEnc and enc and enc ~= "[]" then
+										argsStr = enc
+									else
+										argsStr = "{}"
+									end
+								else
+									argsStr = "{}"
+								end
 							end
 							table.insert(tcList, {
 								id = tc.id or ("call_" .. idx),
@@ -15767,11 +15775,15 @@ Guidelines:
 					for idx, tr in ipairs(item.toolResults or {}) do
 						local contentStr = "{}"
 						if tr.result ~= nil then
-							local okEnc, enc = pcall(httpService.JSONEncode, httpService, tr.result)
-							if okEnc and enc then
-								contentStr = enc
+							if typeof(tr.result) == "table" and next(tr.result) == nil then
+								contentStr = "{}"
 							else
-								contentStr = tostring(tr.result)
+								local okEnc, enc = pcall(httpService.JSONEncode, httpService, tr.result)
+								if okEnc and enc then
+									contentStr = enc
+								else
+									contentStr = tostring(tr.result)
+								end
 							end
 						end
 						table.insert(messages, {
@@ -15937,6 +15949,7 @@ Guidelines:
 								id = tc.id or ("call_" .. idx .. "_" .. os.time()),
 								name = fn.name,
 								args = parsedArgs,
+								rawArgs = (rawArgs ~= "" and rawArgs ~= "[]") and rawArgs or "{}",
 							})
 						end
 					end
