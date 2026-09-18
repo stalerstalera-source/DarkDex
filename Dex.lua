@@ -15928,7 +15928,7 @@ Guidelines:
 
 				if msg.tool_calls and #msg.tool_calls > 0 then
 					for idx, tc in ipairs(msg.tool_calls) do
-						local fn = tc["function"] or tc.function
+						local fn = tc["function"]
 						if fn and fn.name then
 							local rawArgs = fn.arguments or "{}"
 							local okArgs, parsedArgs = pcall(function() return httpService:JSONDecode(rawArgs) end)
